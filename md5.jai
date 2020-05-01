@@ -11,8 +11,6 @@ md5 :: (input: string) -> string #must {
     pad  := 512 - (input.count*4 + 64) % 512;
     size := input.count*4 + 64 + pad;
 
-    print("% %\n", pad, size);
-
     // create a buffer we can work with
     data : []u8 = ---;
     data.count = size;

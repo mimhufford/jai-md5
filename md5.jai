@@ -8,9 +8,9 @@ md5 :: (input: string) -> string #must {
 
     // pad size to nearest 512 bits, plus make sure there is
     // room for 64 bits at the end to include the original size
-    pad  := 512 - (input.count*4 + 64) % 512;
-    size := input.count*4 + 64 + pad;
-    assert(size % 512 == 0);
+    pad  := 64 - (input.count + 8) % 64;
+    size := input.count + 8 + pad;
+    assert(size % 64 == 0);
 
     // create a buffer we can work with
     data : []u8 = ---;
@@ -26,9 +26,15 @@ md5 :: (input: string) -> string #must {
     // write a 1 bit right after the original input
     data[input.count] = 0b1000_0000;
 
-    // write original size into last 64 bits
-    mem := data.data + size - 8;
-    << cast(*u64) mem = cast(u64)(input.count);
+    // write original size (int bits) into last 64 bits    
+    dst := cast(*u64) (data.data + size - 8);
+    <<dst = cast(u64) (input.count * 8);
+    
+    // @TEMPORARY
+    #if 0 {
+        base := cast(*u32) data.data;
+        for 0..31 print("%\n", << (base+it));
+    }
 
     // set up digest parts
     a0 : u32 = 0x67452301;
@@ -37,7 +43,7 @@ md5 :: (input: string) -> string #must {
     d0 : u32 = 0x10325476;
 
     // for each 512 bit chunk
-    for chunk: 0..cast(u32)(size/512)-1 {
+    for chunk: 0..cast(u32)(size/64)-1 {
         A, B, C, D := a0, b0, c0, d0;
         
         // 64 passes
@@ -49,18 +55,18 @@ md5 :: (input: string) -> string #must {
                 g = it;
             } else if it < 32 {
                 F = C ^ (D & (B ^ C));
-                g := (it*5 + 1) % 16;
+                g = (it*5 + 1) % 16;
             } else if it < 48 {
                 F = B ^ C ^ D;
-                g := (it*3 + 5) % 16;
+                g = (it*3 + 5) % 16;
             } else {
                 F = C ^ (B | (~D));
-                g := (it*3) % 16;
+                g = (it*7) % 16;
             }
 
             // grab the relevant 32 bits from the original input
-            mem  := data.data + chunk*512 + g*4;
-            word := << cast(*u32) mem;
+            base := cast(*u32) data.data;
+            word := << (base + g);
 
             // apply this section of data
             F += A + K[it] + word;
@@ -68,6 +74,9 @@ md5 :: (input: string) -> string #must {
             D = C;
             C = B;
             B += left_rotate(F, s[it]); // @TODO: remove after <<<
+
+            // @TEMPORARY
+            #if 1  print("[i = %] A=%, B=%, C=%, D=%\n", it, A, B, C, D);
         }
 
         // update the digest with this chunk's data

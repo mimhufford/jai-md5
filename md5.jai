@@ -6,9 +6,12 @@
 
 md5 :: (input: string) -> string #must {
 
-    // pad size to nearest 512 bits
-    pad  := 512 - input.count % 512;
-    size := input.count + pad;
+    // pad size to nearest 512 bits, plus make sure there is
+    // room for 64 bits at the end to include the original size
+    pad  := 512 - (input.count*4 + 64) % 512;
+    size := input.count*4 + 64 + pad;
+
+    print("% %\n", pad, size);
 
     // create a buffer we can work with
     data : []u8 = ---;

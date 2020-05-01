@@ -10,6 +10,7 @@ md5 :: (input: string) -> string #must {
     // room for 64 bits at the end to include the original size
     pad  := 512 - (input.count*4 + 64) % 512;
     size := input.count*4 + 64 + pad;
+    assert(size % 512 == 0);
 
     // create a buffer we can work with
     data : []u8 = ---;

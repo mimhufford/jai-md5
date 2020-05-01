@@ -19,20 +19,14 @@ md5 :: (input: string) -> string #must {
     memset(data.data, 0, size);
 
     // copy in the original input
-    for 0..input.count-1 data[it] = input[it];
+    memcpy(data.data, input.data, input.count);
 
     // write a 1 bit right after the original input
     data[input.count] = 0b1000_0000;
 
     // write original size into last 64 bits
-    data[size-8] = cast,trunc(u8) input.count >> 7 & 0xff;
-    data[size-7] = cast,trunc(u8) input.count >> 6 & 0xff;
-    data[size-6] = cast,trunc(u8) input.count >> 5 & 0xff;
-    data[size-5] = cast,trunc(u8) input.count >> 4 & 0xff;
-    data[size-4] = cast,trunc(u8) input.count >> 3 & 0xff;
-    data[size-3] = cast,trunc(u8) input.count >> 2 & 0xff;
-    data[size-2] = cast,trunc(u8) input.count >> 1 & 0xff;
-    data[size-1] = cast,trunc(u8) input.count >> 0 & 0xff;
+    mem := data.data + size - 8;
+    << cast(*u64) mem = cast(u64)(input.count);
 
     // set up digest parts
     a0 : u32 = 0x67452301;
@@ -44,14 +38,15 @@ md5 :: (input: string) -> string #must {
     for chunk: 0..cast(u32)(size/512)-1 {
         A, B, C, D := a0, b0, c0, d0;
         
+        // 64 passes
         for 0..cast(u32)63 {
             F, g : u32;
 
             if it < 16 {
-                F = (B & C) | ((~B) & D);
+                F = D ^ (B & (C ^ D));
                 g = it;
             } else if it < 32 {
-                F = (D & B) | ((~D) & C);
+                F = C ^ (D & (B ^ C));
                 g := (it*5 + 1) % 16;
             } else if it < 48 {
                 F = B ^ C ^ D;
@@ -61,16 +56,11 @@ md5 :: (input: string) -> string #must {
                 g := (it*3) % 16;
             }
 
-            // @SPEED: should do this outside the loop
             // grab the relevant 32 bits from the original input
-            offset := chunk*512 + g*4;
-            word : u32;
-            word += data[offset+0] << 3;
-            word += data[offset+1] << 2;
-            word += data[offset+2] << 1;
-            word += data[offset+3] << 0;
+            mem  := data.data + chunk*512 + g*4;
+            word := << cast(*u32) mem;
 
-            // apply the hash to this section of data
+            // apply this section of data
             F += A + K[it] + word;
             A = D;
             D = C;
@@ -85,6 +75,7 @@ md5 :: (input: string) -> string #must {
         d0 += D;
     }
 
+    // generate the digest
     sb : String_Builder;
     append(*sb, tprint("%", formatInt(a0, base=16, minimum_digits=8)));
     append(*sb, tprint("%", formatInt(b0, base=16, minimum_digits=8)));

@@ -97,18 +97,16 @@ md5 :: (input: string) -> string #must {
     return builder_to_string(*sb);
 }
 
-main :: () {
-    input    := "The quick brown fox jumps over the lazy dog";
-    result   := md5(input);
-    expected := "9e107d9d372bb6826bd81d3542a419d6";
-    print("Input:    %\nResult:   %\nExpected: %", input, result, expected);
+#scope_file
+
+md5_tests :: () {
+    assert(md5("") == "d41d8cd98f00b204e9800998ecf8427e");
+    assert(md5("Mim Hufford") == "111126655c03434e1c4d7d1d9104b790");
+    assert(md5("The quick brown fox jumps over the lazy dog") == "9e107d9d372bb6826bd81d3542a419d6");
+    assert(md5("The man in black fled across the desert the gunslinger followed.") == "fe48b3e0d34c4a261dcd13fc277888a1");
 }
 
-#run main();
-
-
-
-#scope_file
+#run md5_tests();
 
 #import "Basic";
 

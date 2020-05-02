@@ -30,12 +30,6 @@ md5 :: (input: string) -> string #must {
     dst := cast(*u64) (data.data + size - 8);
     <<dst = cast(u64) (input.count * 8);
     
-    // @TEMPORARY
-    #if 0 {
-        base := cast(*u32) data.data;
-        for 0..31 print("%\n", << (base+it));
-    }
-
     // set up digest parts
     a0 : u32 = 0x67452301;
     b0 : u32 = 0xefcdab89;
@@ -65,8 +59,7 @@ md5 :: (input: string) -> string #must {
             }
 
             // grab the relevant 32 bits from the original input
-            base := cast(*u32) data.data;
-            word := << (base + g);
+            word := << ((cast(*u32)data.data) + g);
 
             // apply this section of data
             F += A + K[it] + word;
@@ -74,9 +67,6 @@ md5 :: (input: string) -> string #must {
             D = C;
             C = B;
             B += left_rotate(F, s[it]); // @TODO: remove after <<<
-
-            // @TEMPORARY
-            #if 1  print("[i = %] A=%, B=%, C=%, D=%\n", it, A, B, C, D);
         }
 
         // update the digest with this chunk's data
@@ -88,11 +78,22 @@ md5 :: (input: string) -> string #must {
 
     // generate the digest
     sb : String_Builder;
-    append(*sb, tprint("%", formatInt(a0, base=16, minimum_digits=8)));
-    append(*sb, tprint("%", formatInt(b0, base=16, minimum_digits=8)));
-    append(*sb, tprint("%", formatInt(c0, base=16, minimum_digits=8)));
-    append(*sb, tprint("%", formatInt(d0, base=16, minimum_digits=8)));
-
+    append(*sb, tprint("%", formatInt(a0 & 0x000000FF >>  0, base=16, minimum_digits=2)));
+    append(*sb, tprint("%", formatInt(a0 & 0x0000FF00 >>  8, base=16, minimum_digits=2)));
+    append(*sb, tprint("%", formatInt(a0 & 0x00FF0000 >> 16, base=16, minimum_digits=2)));
+    append(*sb, tprint("%", formatInt(a0 & 0xFF000000 >> 24, base=16, minimum_digits=2)));
+    append(*sb, tprint("%", formatInt(b0 & 0x000000FF >>  0, base=16, minimum_digits=2)));
+    append(*sb, tprint("%", formatInt(b0 & 0x0000FF00 >>  8, base=16, minimum_digits=2)));
+    append(*sb, tprint("%", formatInt(b0 & 0x00FF0000 >> 16, base=16, minimum_digits=2)));
+    append(*sb, tprint("%", formatInt(b0 & 0xFF000000 >> 24, base=16, minimum_digits=2)));
+    append(*sb, tprint("%", formatInt(c0 & 0x000000FF >>  0, base=16, minimum_digits=2)));
+    append(*sb, tprint("%", formatInt(c0 & 0x0000FF00 >>  8, base=16, minimum_digits=2)));
+    append(*sb, tprint("%", formatInt(c0 & 0x00FF0000 >> 16, base=16, minimum_digits=2)));
+    append(*sb, tprint("%", formatInt(c0 & 0xFF000000 >> 24, base=16, minimum_digits=2)));
+    append(*sb, tprint("%", formatInt(d0 & 0x000000FF >>  0, base=16, minimum_digits=2)));
+    append(*sb, tprint("%", formatInt(d0 & 0x0000FF00 >>  8, base=16, minimum_digits=2)));
+    append(*sb, tprint("%", formatInt(d0 & 0x00FF0000 >> 16, base=16, minimum_digits=2)));
+    append(*sb, tprint("%", formatInt(d0 & 0xFF000000 >> 24, base=16, minimum_digits=2)));
     return builder_to_string(*sb);
 }
 
@@ -103,7 +104,7 @@ main :: () {
     print("Input:    %\nResult:   %\nExpected: %", input, result, expected);
 }
 
-
+#run main();
 
 
 

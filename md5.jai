@@ -59,7 +59,7 @@ md5 :: (input: string) -> string #must {
             }
 
             // grab the relevant 32 bits from the original input
-            word := << ((cast(*u32)data.data) + g);
+            word := << ((cast(*u32)data.data) + chunk*16 + g);
 
             // apply this section of data
             F += A + K[it] + word;

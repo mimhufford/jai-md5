@@ -104,6 +104,7 @@ md5_tests :: () {
     assert(md5("Mim Hufford") == "111126655c03434e1c4d7d1d9104b790");
     assert(md5("The quick brown fox jumps over the lazy dog") == "9e107d9d372bb6826bd81d3542a419d6");
     assert(md5("The man in black fled across the desert the gunslinger followed.") == "fe48b3e0d34c4a261dcd13fc277888a1");
+    assert(md5("The man in black fled across the desert the gunslinger followed. The man in black fled across the desert the gunslinger followed.") == "eab13003ea3ff3c14370019a685956d3");
 }
 
 #run md5_tests();

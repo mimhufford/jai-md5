@@ -78,22 +78,19 @@ md5 :: (input: string) -> string #must {
 
     // generate the digest
     sb : String_Builder;
-    append(*sb, tprint("%", formatInt(a0 & 0x000000FF >>  0, base=16, minimum_digits=2)));
-    append(*sb, tprint("%", formatInt(a0 & 0x0000FF00 >>  8, base=16, minimum_digits=2)));
-    append(*sb, tprint("%", formatInt(a0 & 0x00FF0000 >> 16, base=16, minimum_digits=2)));
-    append(*sb, tprint("%", formatInt(a0 & 0xFF000000 >> 24, base=16, minimum_digits=2)));
-    append(*sb, tprint("%", formatInt(b0 & 0x000000FF >>  0, base=16, minimum_digits=2)));
-    append(*sb, tprint("%", formatInt(b0 & 0x0000FF00 >>  8, base=16, minimum_digits=2)));
-    append(*sb, tprint("%", formatInt(b0 & 0x00FF0000 >> 16, base=16, minimum_digits=2)));
-    append(*sb, tprint("%", formatInt(b0 & 0xFF000000 >> 24, base=16, minimum_digits=2)));
-    append(*sb, tprint("%", formatInt(c0 & 0x000000FF >>  0, base=16, minimum_digits=2)));
-    append(*sb, tprint("%", formatInt(c0 & 0x0000FF00 >>  8, base=16, minimum_digits=2)));
-    append(*sb, tprint("%", formatInt(c0 & 0x00FF0000 >> 16, base=16, minimum_digits=2)));
-    append(*sb, tprint("%", formatInt(c0 & 0xFF000000 >> 24, base=16, minimum_digits=2)));
-    append(*sb, tprint("%", formatInt(d0 & 0x000000FF >>  0, base=16, minimum_digits=2)));
-    append(*sb, tprint("%", formatInt(d0 & 0x0000FF00 >>  8, base=16, minimum_digits=2)));
-    append(*sb, tprint("%", formatInt(d0 & 0x00FF0000 >> 16, base=16, minimum_digits=2)));
-    append(*sb, tprint("%", formatInt(d0 & 0xFF000000 >> 24, base=16, minimum_digits=2)));
+
+    append :: (sb: *String_Builder, n: u32) {
+        print_to_builder(sb, "%", formatInt(n & 0x000000FF >>  0, base=16, minimum_digits=2));
+        print_to_builder(sb, "%", formatInt(n & 0x0000FF00 >>  8, base=16, minimum_digits=2));
+        print_to_builder(sb, "%", formatInt(n & 0x00FF0000 >> 16, base=16, minimum_digits=2));
+        print_to_builder(sb, "%", formatInt(n & 0xFF000000 >> 24, base=16, minimum_digits=2));
+    }
+
+    append(*sb, a0);
+    append(*sb, b0);
+    append(*sb, c0);
+    append(*sb, d0);
+
     return builder_to_string(*sb);
 }
 

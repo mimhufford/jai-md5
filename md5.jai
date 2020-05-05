@@ -26,7 +26,7 @@ md5 :: (input: string) -> string #must {
     // write a 1 bit right after the original input
     data[input.count] = 0b1000_0000;
 
-    // write original size (int bits) into last 64 bits    
+    // write original size (in bits) into last 64 bits    
     dst := cast(*u64) (data.data + size - 8);
     <<dst = cast(u64) (input.count * 8);
     
@@ -66,7 +66,7 @@ md5 :: (input: string) -> string #must {
             A = D;
             D = C;
             C = B;
-            B += left_rotate(F, s[it]); // @TODO: remove after <<<
+            B += F <<< s[it];
         }
 
         // update the digest with this chunk's data
@@ -80,10 +80,11 @@ md5 :: (input: string) -> string #must {
     sb : String_Builder;
 
     append :: (sb: *String_Builder, n: u32) {
-        print_to_builder(sb, "%", formatInt(n & 0x000000FF >>  0, base=16, minimum_digits=2));
-        print_to_builder(sb, "%", formatInt(n & 0x0000FF00 >>  8, base=16, minimum_digits=2));
-        print_to_builder(sb, "%", formatInt(n & 0x00FF0000 >> 16, base=16, minimum_digits=2));
-        print_to_builder(sb, "%", formatInt(n & 0xFF000000 >> 24, base=16, minimum_digits=2));
+        // Might be nicer here to just byte-swap if wrong endian and then do one print with minimum_digits=8.
+        print_to_builder(sb, "%", formatInt((n >>  0) & 0xFF, base=16, minimum_digits=2));
+        print_to_builder(sb, "%", formatInt((n >>  8) & 0xFF, base=16, minimum_digits=2));
+        print_to_builder(sb, "%", formatInt((n >> 16) & 0xFF, base=16, minimum_digits=2));
+        print_to_builder(sb, "%", formatInt((n >> 24) & 0xFF, base=16, minimum_digits=2));
     }
 
     append(*sb, a0);
@@ -96,22 +97,7 @@ md5 :: (input: string) -> string #must {
 
 #scope_file
 
-md5_tests :: () {
-    assert(md5("") == "d41d8cd98f00b204e9800998ecf8427e");
-    assert(md5("Mim Hufford") == "111126655c03434e1c4d7d1d9104b790");
-    assert(md5("The quick brown fox jumps over the lazy dog") == "9e107d9d372bb6826bd81d3542a419d6");
-    assert(md5("The man in black fled across the desert the gunslinger followed.") == "fe48b3e0d34c4a261dcd13fc277888a1");
-    assert(md5("The man in black fled across the desert the gunslinger followed. The man in black fled across the desert the gunslinger followed.") == "eab13003ea3ff3c14370019a685956d3");
-}
-
-#run md5_tests();
-
 #import "Basic";
-
-// @TODO: remove once <<< is released
-left_rotate :: (num: u32, amount: u32) -> u32 #must {
-    return (num << amount) | (num >> (32 - amount)); 
-}
 
 s :: {:u32:
     7, 12, 17, 22,  7, 12, 17, 22,  7, 12, 17, 22,  7, 12, 17, 22,
@@ -138,3 +124,11 @@ K :: {:u32:
     0x6fa87e4f, 0xfe2ce6e0, 0xa3014314, 0x4e0811a1,
     0xf7537e82, 0xbd3af235, 0x2ad7d2bb, 0xeb86d391,
 };
+
+md5_tests :: () {
+    assert(md5("") == "d41d8cd98f00b204e9800998ecf8427e");
+    assert(md5("Mim Hufford") == "111126655c03434e1c4d7d1d9104b790");
+    assert(md5("The quick brown fox jumps over the lazy dog") == "9e107d9d372bb6826bd81d3542a419d6");
+    assert(md5("The man in black fled across the desert the gunslinger followed.") == "fe48b3e0d34c4a261dcd13fc277888a1");
+    assert(md5("The man in black fled across the desert the gunslinger followed. The man in black fled across the desert the gunslinger followed.") == "eab13003ea3ff3c14370019a685956d3");
+}

@@ -1,7 +1,7 @@
 /*
     A simple MD5 utility
     Author: Mim Hufford
-    Date:   01 May 2020
+    Date:   15 May 2020
 */
 
 md5 :: (input: string) -> string #must {
@@ -79,18 +79,10 @@ md5 :: (input: string) -> string #must {
     // generate the digest
     sb : String_Builder;
 
-    append :: (sb: *String_Builder, n: u32) {
-        // Might be nicer here to just byte-swap if wrong endian and then do one print with minimum_digits=8.
-        print_to_builder(sb, "%", formatInt((n >>  0) & 0xFF, base=16, minimum_digits=2));
-        print_to_builder(sb, "%", formatInt((n >>  8) & 0xFF, base=16, minimum_digits=2));
-        print_to_builder(sb, "%", formatInt((n >> 16) & 0xFF, base=16, minimum_digits=2));
-        print_to_builder(sb, "%", formatInt((n >> 24) & 0xFF, base=16, minimum_digits=2));
-    }
-
-    append(*sb, a0);
-    append(*sb, b0);
-    append(*sb, c0);
-    append(*sb, d0);
+    print_to_builder(*sb, "%", formatInt(byte_swap(a0), base=16, minimum_digits=8));
+    print_to_builder(*sb, "%", formatInt(byte_swap(b0), base=16, minimum_digits=8));
+    print_to_builder(*sb, "%", formatInt(byte_swap(c0), base=16, minimum_digits=8));
+    print_to_builder(*sb, "%", formatInt(byte_swap(d0), base=16, minimum_digits=8));
 
     return builder_to_string(*sb);
 }

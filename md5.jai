@@ -39,34 +39,23 @@ md5 :: (input: string) -> string #must {
     // for each 512 bit chunk
     for chunk: 0..cast(u32)(size/64)-1 {
         A, B, C, D := a0, b0, c0, d0;
-        
-        // 64 passes
-        for 0..cast(u32)63 {
-            F, g : u32;
 
-            if it < 16 {
-                F = D ^ (B & (C ^ D));
-                g = it;
-            } else if it < 32 {
-                F = C ^ (D & (B ^ C));
-                g = (it*5 + 1) % 16;
-            } else if it < 48 {
-                F = B ^ C ^ D;
-                g = (it*3 + 5) % 16;
-            } else {
-                F = C ^ (B | (~D));
-                g = (it*7) % 16;
-            }
-
-            // grab the relevant 32 bits from the original input
-            word := << ((cast(*u32)data.data) + chunk*16 + g);
-
-            // apply this section of data
-            F += A + K[it] + word;
-            A = D;
-            D = C;
-            C = B;
-            B += F <<< s[it];
+        // 64 passes, split into 16s to avoid branching
+        for 0..cast(u32)15 {
+            F := D ^ (B & (C ^ D));
+            commit_pass(it);
+        }
+        for 16..cast(u32)31 {
+            F := C ^ (D & (B ^ C));
+            commit_pass((it*5 + 1) % 16);
+        }
+        for 32..cast(u32)47 {
+            F := B ^ C ^ D;
+            commit_pass((it*3 + 5) % 16);
+        }
+        for 48..cast(u32)63 {
+            F := C ^ (B | (~D));
+            commit_pass((it*7) % 16);
         }
 
         // update the digest with this chunk's data
@@ -90,15 +79,16 @@ md5 :: (input: string) -> string #must {
 #scope_file
 
 #import "Basic";
+#import "Bit_Operations";
 
-s :: {:u32:
+s :: u32.[
     7, 12, 17, 22,  7, 12, 17, 22,  7, 12, 17, 22,  7, 12, 17, 22,
     5,  9, 14, 20,  5,  9, 14, 20,  5,  9, 14, 20,  5,  9, 14, 20,
     4, 11, 16, 23,  4, 11, 16, 23,  4, 11, 16, 23,  4, 11, 16, 23,
     6, 10, 15, 21,  6, 10, 15, 21,  6, 10, 15, 21,  6, 10, 15, 21,
-};
+];
 
-K :: {:u32:
+K :: u32.[
     0xd76aa478, 0xe8c7b756, 0x242070db, 0xc1bdceee,
     0xf57c0faf, 0x4787c62a, 0xa8304613, 0xfd469501,
     0x698098d8, 0x8b44f7af, 0xffff5bb1, 0x895cd7be,
@@ -115,7 +105,19 @@ K :: {:u32:
     0x655b59c3, 0x8f0ccc92, 0xffeff47d, 0x85845dd1,
     0x6fa87e4f, 0xfe2ce6e0, 0xa3014314, 0x4e0811a1,
     0xf7537e82, 0xbd3af235, 0x2ad7d2bb, 0xeb86d391,
-};
+];
+
+commit_pass :: (g: u32) #expand {
+    // grab the relevant 32 bits from the original input
+    word := << ((cast(*u32)`data.data) + `chunk*16 + g);
+
+    // apply this section of data
+    `F += `A + K[`it] + word;
+    `A = `D;
+    `D = `C;
+    `C = `B;
+    `B += `F <<< s[`it];
+}
 
 md5_tests :: () {
     assert(md5("") == "d41d8cd98f00b204e9800998ecf8427e");
